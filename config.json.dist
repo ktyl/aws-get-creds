@@ -1,8 +1,0 @@
-{
-    "mfa-serial" : "serial",
-    "profiles" :
-    [
-        "profile1",
-        "profile2"
-    ]
-}
