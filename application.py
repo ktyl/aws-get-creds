@@ -17,12 +17,26 @@ class Application:
     def run(self):
         profiles = self.parse_configuration(self.config_path)
         assumed_roles = {}
+        errors = False
         for source_profile, assume_config in profiles.items():
             for mfa, profiles in assume_config.items():
                 client = self.get_authorized_sts_client(source_profile, mfa)
                 for profile in profiles:
-                    assumed_roles[profile['name']] = self.assume_role(client, profile)
-        self.write_config(self.credenials_path, assumed_roles)
+                    try:
+                        assumed_roles[profile['name']] = self.assume_role(client, profile)
+                    except Exception as e:
+                        print(f"Error while assuming role for profile {profile}\n{str(e)}")
+                        errors = True
+
+        save = True
+        if errors:
+            response = input("There were errors while obtaining the credentials, do you want to write the credentials file anyway? [Y/N]: ")
+            save = (response == "Y" or response == "y")
+
+        if save:
+            self.write_config(self.credenials_path, assumed_roles)
+        else:
+            print("The credentials file has not been updated.")
 
     def parse_configuration(self, path: str) -> dict:
         if not os.path.exists(path):
