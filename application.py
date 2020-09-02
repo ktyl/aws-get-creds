@@ -31,7 +31,7 @@ class Application:
         save = True
         if errors:
             response = input("There were errors while obtaining the credentials, do you want to write the credentials file anyway? [Y/N]: ")
-            save = (response == "Y" or response == "y")
+            save = (response.upper() == "Y")
 
         if save:
             self.write_config(self.credenials_path, assumed_roles)
