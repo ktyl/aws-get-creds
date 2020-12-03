@@ -37,7 +37,7 @@ source_profile = foobar-hub
 mfa_serial = arn:aws:iam::XXXXXXXX:mfa/ktyl
 
 [foobar-admin]
-role_arn = arn:aws:iam::XXXXXXXX:role/developer
+role_arn = arn:aws:iam::XXXXXXXX:role/admin
 source_profile = foobar-hub
 mfa_serial = arn:aws:iam::XXXXXXXX:mfa/ktyl
 ```
