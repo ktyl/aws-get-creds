@@ -20,13 +20,17 @@ class Application:
         errors = False
         for source_profile, assume_config in profiles.items():
             for mfa, profiles in assume_config.items():
-                client = self.get_authorized_sts_client(source_profile, mfa)
-                for profile in profiles:
-                    try:
-                        assumed_roles[profile['name']] = self.assume_role(client, profile)
-                    except Exception as e:
-                        print(f"Error while assuming role for profile {profile}\n{str(e)}")
-                        errors = True
+                try:
+                    client = self.get_authorized_sts_client(source_profile, mfa)
+                    for profile in profiles:
+                        try:
+                            assumed_roles[profile['name']] = self.assume_role(client, profile)
+                        except Exception as e:
+                            print(f"Error while assuming role for profile {profile}\n{str(e)}")
+                            errors = True
+                except Exception as e:
+                    print(f"Error while authorizing the profile {source_profile} using one time password.\n{str(e)}")
+                    errors = True
 
         save = True
         if errors:
