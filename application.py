@@ -22,6 +22,7 @@ class Application:
             for mfa, profiles in assume_config.items():
                 try:
                     client = self.get_authorized_sts_client(source_profile, mfa)
+                    print(f"Authorized the profile {source_profile} using one time password.")
                     for profile in profiles:
                         try:
                             assumed_roles[profile['name']] = self.assume_role(client, profile)
@@ -32,15 +33,8 @@ class Application:
                     print(f"Error while authorizing the profile {source_profile} using one time password.\n{str(e)}")
                     errors = True
 
-        save = True
         if errors:
-            response = input("There were errors while obtaining the credentials, do you want to write the credentials file anyway? [Y/N]: ")
-            save = (response.upper() == "Y")
-
-        if save:
-            self.write_config(self.credenials_path, assumed_roles)
-        else:
-            print("The credentials file has not been updated.")
+            raise Exception("There were errors while obtaining the credentials,. The credentials file has not been updated.")
 
     def parse_configuration(self, path: str) -> dict:
         if not os.path.exists(path):
@@ -94,7 +88,7 @@ class Application:
     def assume_role(self, client, profile):
         response = client.assume_role(
             RoleArn=profile["role"],
-            RoleSessionName=profile["name"] + "-".join(random.sample(string.ascii_lowercase, 10)), # this should contain the name of the user that assumes the role
+            RoleSessionName=profile["name"] + "".join(random.sample(string.ascii_lowercase, 10)), # this should contain the name of the user that assumes the role
             DurationSeconds=3600,
         )
 
