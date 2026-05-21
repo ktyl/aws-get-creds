@@ -2,9 +2,20 @@
 The tool fetches the temporary AWS credentials and stores them in global credentials file.
 
 ## Installation
+
+Install via [pipx](https://pipx.pypa.io) for an isolated, globally available `awsc` command (no local clone needed):
+
+```bash
+pipx install git+https://github.com/ktyl/aws-get-creds.git
 ```
-pip install -r requirements.txt
+
+To upgrade to the latest version:
+
+```bash
+pipx reinstall aws-get-creds
 ```
+
+> **Requirements:** Python ≥ 3.10
 
 ## Configuration
 In the following example we will configure the script to fetch the credentials for assumed `foobar-developer` and `foobar-admin` roles, using the profile `foobar-hub` as a base profile.
@@ -44,7 +55,7 @@ mfa_serial = arn:aws:iam::XXXXXXXX:mfa/ktyl
 
 ## Usage
 ```
-python aws-get-creds.py
+awsc
 ```
 
 This will fetch the temporary credentials and store them in the global credentials file. The name of temporary profile is the same as the section of the `aws-get-creds.ini` in which the corresponding role was defined.
