@@ -1,40 +1,43 @@
 from pathlib import Path
-from exceptions import *
+from exceptions import ConfigurationException
 import boto3
 import configparser
 import os
-import random
-import string
+import secrets
 
 class Application:
 
     config_path = os.path.join(str(Path.home()), ".aws/aws-get-creds.ini")
-    credenials_path = os.path.join(str(Path.home()), ".aws/credentials")
-
-    def __init__(self):
-        pass
+    credentials_path = os.path.join(str(Path.home()), ".aws/credentials")
 
     def run(self):
         profiles = self.parse_configuration(self.config_path)
         assumed_roles = {}
         errors = False
         for source_profile, assume_config in profiles.items():
-            for mfa, profiles in assume_config.items():
+            for mfa, profiles_to_assume in assume_config.items():
                 try:
                     client = self.get_authorized_sts_client(source_profile, mfa)
-                    print(f"Authorized the profile {source_profile} using one time password.")
-                    for profile in profiles:
+                    # get_caller_identity is called intentionally to embed the IAM username
+                    # in each session name, making it easier to distinguish sessions created
+                    # by different users when inspecting AWS CloudTrail or the IAM console.
+                    caller_identity = client.get_caller_identity()
+                    username = caller_identity["Arn"].split("/")[-1]
+                    print(f"Authorized the profile {source_profile} using one time password, username: {username}.")
+                    for profile in profiles_to_assume:
                         try:
-                            assumed_roles[profile['name']] = self.assume_role(client, profile)
+                            assumed_roles[profile['name']] = self.assume_role(client, username, profile)
                         except Exception as e:
-                            print(f"Error while assuming role for profile {profile}\n{str(e)}")
+                            print(f"Error while assuming role for profile {profile['name']}\n{str(e)}")
                             errors = True
                 except Exception as e:
                     print(f"Error while authorizing the profile {source_profile} using one time password.\n{str(e)}")
                     errors = True
 
         if errors:
-            raise Exception("There were errors while obtaining the credentials,. The credentials file has not been updated.")
+            raise Exception("There were errors while obtaining the credentials. The credentials file has not been updated.")
+        
+        self.write_config(self.credentials_path, assumed_roles)
 
     def parse_configuration(self, path: str) -> dict:
         if not os.path.exists(path):
@@ -58,9 +61,9 @@ class Application:
             else:
                 mfa_serial = 'no-mfa' # not supported yet
 
-            if not source_profile in profiles:
+            if source_profile not in profiles:
                 profiles[source_profile] = {}
-            if not mfa_serial in profiles[source_profile]:
+            if mfa_serial not in profiles[source_profile]:
                 profiles[source_profile][mfa_serial] = []
             profiles[source_profile][mfa_serial].append({
                 'name': profile,
@@ -85,12 +88,10 @@ class Application:
             aws_secret_access_key=mfa_creds["Credentials"]["SecretAccessKey"],
             aws_session_token=mfa_creds["Credentials"]["SessionToken"])
 
-    def assume_role(self, client, profile):
-        caller_identity = client.get_caller_identity()
-        username = caller_identity["Arn"].split("/")[-1]
+    def assume_role(self, client, session_name, profile):
         response = client.assume_role(
             RoleArn=profile["role"],
-            RoleSessionName=username + "".join(random.sample(string.ascii_lowercase, 10)),
+            RoleSessionName=session_name[:48] + secrets.token_hex(8),
             DurationSeconds=3600,
         )
 
@@ -101,8 +102,9 @@ class Application:
         }
 
     def write_config(self, path, data):
+        os.makedirs(os.path.dirname(path), exist_ok=True)
         if not os.path.exists(path):
-            raise FileNotFoundError(f"Configuration file `{path}` does not exist")
+            with open(path, 'w'): pass
 
         config = configparser.ConfigParser()
         config.read(path)

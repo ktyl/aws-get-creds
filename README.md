@@ -7,9 +7,9 @@ pip install -r requirements.txt
 ```
 
 ## Configuration
-In the following exampe we will configure the script to fetch the credentials for assumed `foobar-developer` and `foobar-admin` roles, using the profile `foobar-hub` as a base profile.
+In the following example we will configure the script to fetch the credentials for assumed `foobar-developer` and `foobar-admin` roles, using the profile `foobar-hub` as a base profile.
 
-* Make sure that `~/.aws/credentials` file exists in your home directory and that it contains the configuration of the profile you want to assume the role from (the base profile).
+* Make sure that `~/.aws/credentials` contains the configuration of the profile you want to assume the role from (the base profile).
 
 Example (`~/.aws/credentials`):
 ```
@@ -27,7 +27,7 @@ aws_secret_access_key = XXXXXXXX
 * provide the following values in each section:
     * `role_arn` - the arn of the role you want to get the temporary credentials for
     * `source_profile` - profile defined in the global credentials file used for assuming into the role
-    * `mfa_serial` - serial number of the MFA device you want to use for 2 factor authentication
+    * `mfa_serial` - ARN of the MFA device you want to use for 2 factor authentication
 
 Example (`~/.aws/aws-get-creds.ini`):
 ```
