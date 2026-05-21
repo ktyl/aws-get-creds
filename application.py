@@ -86,9 +86,11 @@ class Application:
             aws_session_token=mfa_creds["Credentials"]["SessionToken"])
 
     def assume_role(self, client, profile):
+        caller_identity = client.get_caller_identity()
+        username = caller_identity["Arn"].split("/")[-1]
         response = client.assume_role(
             RoleArn=profile["role"],
-            RoleSessionName=profile["name"] + "".join(random.sample(string.ascii_lowercase, 10)), # this should contain the name of the user that assumes the role
+            RoleSessionName=username + "".join(random.sample(string.ascii_lowercase, 10)),
             DurationSeconds=3600,
         )
 
