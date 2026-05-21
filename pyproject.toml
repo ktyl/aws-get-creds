@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "aws-get-creds"
+version = "1.0.0"
+description = "Fetches temporary AWS credentials and stores them in the global credentials file."
+requires-python = ">=3.10"
+dependencies = [
+    "boto3==1.43.12",
+]
+
+[project.scripts]
+awsc = "aws_get_creds:main"
+
+[tool.setuptools]
+py-modules = ["application", "exceptions", "aws_get_creds"]
